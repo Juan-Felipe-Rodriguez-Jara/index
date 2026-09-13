@@ -1,0 +1,667 @@
+<h1>
+  <!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>¿Qué cocino?</title>
+<style>
+  :root {
+    --bg: #FFF8F0;
+    --primary: #FF7043;
+    --primary-dark: #E8592B;
+    --primary-tint: #FFE3D6;
+    --secondary: #66BB6A;
+    --secondary-dark: #4F9E54;
+    --secondary-tint: #E4F5E6;
+    --text: #263238;
+    --text-soft: #5B6B6F;
+    --card: #FFFFFF;
+    --accent: #FFD54F;
+    --shadow: 0 10px 26px rgba(38,54,56,0.12);
+    --shadow-sm: 0 2px 10px rgba(38,54,56,0.08);
+    --radius-lg: 26px;
+    --radius-md: 18px;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+  }
+  h1, h2, h3, p { margin: 0; }
+  button { font-family: inherit; }
+
+  /* ---------- Marco tipo teléfono ---------- */
+  .phone-frame {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100vh;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+  @media (min-width: 500px) {
+    body { padding: 32px 12px; }
+    .phone-frame {
+      min-height: 800px;
+      border-radius: 34px;
+      box-shadow: 0 30px 60px rgba(38,54,56,0.18);
+      border: 1px solid rgba(38,54,56,0.06);
+    }
+  }
+
+  /* ---------- Pantallas ---------- */
+  .screen {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    padding: max(28px, env(safe-area-inset-top)) 24px 32px;
+  }
+  .screen.active { display: flex; }
+
+  .screen-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .btn-back {
+    background: var(--card); border: none; width: 38px; height: 38px; border-radius: 50%;
+    font-size: 18px; cursor: pointer; box-shadow: var(--shadow-sm); color: var(--text); flex-shrink: 0;
+  }
+  .screen-header h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
+
+  /* ---------- Pantalla de inicio ---------- */
+  .home-content {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    flex: 1; justify-content: center; gap: 4px;
+  }
+  .wordmark h1 { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; }
+  .tagline { font-size: 15px; color: var(--text-soft); margin: 10px 0 22px; max-width: 250px; line-height: 1.45; }
+  .hero-illustration { width: 100%; max-width: 220px; margin-bottom: 26px; }
+  .hero-illustration svg { width: 100%; height: auto; display: block; }
+
+  .btn-primary {
+    background: var(--primary); color: #fff; border: none; border-radius: 999px;
+    font-size: 17px; font-weight: 700; padding: 16px 28px; cursor: pointer;
+    box-shadow: var(--shadow); transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+  }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-primary:active { transform: scale(0.97); box-shadow: var(--shadow-sm); }
+  .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+  .hint-text { font-size: 13px; color: var(--text-soft); margin-top: 14px; max-width: 250px; }
+
+  @keyframes steam-rise {
+    0% { transform: translateY(0) scaleX(1); opacity: 0.18; }
+    50% { transform: translateY(-6px) scaleX(1.1); opacity: 0.55; }
+    100% { transform: translateY(0) scaleX(1); opacity: 0.18; }
+  }
+  .steam-wisp { animation: steam-rise 3.4s ease-in-out infinite; transform-origin: bottom center; }
+  .steam-wisp:nth-child(2) { animation-delay: .5s; }
+  .steam-wisp:nth-child(3) { animation-delay: 1s; }
+
+  /* ---------- Entrada de texto (pantalla de inicio) ---------- */
+  .text-entry { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+  #ingredients-text-input {
+    width: 100%; border: 2px solid var(--primary-tint); border-radius: var(--radius-md);
+    padding: 14px 16px; font-size: 15px; font-family: inherit; color: var(--text);
+    resize: none; outline: none; background: var(--card); line-height: 1.4;
+  }
+  #ingredients-text-input:focus { border-color: var(--primary); }
+  #ingredients-text-input::placeholder { color: #A7B0B2; }
+
+  /* ---------- Pantalla de ingredientes ---------- */
+  .text-preview-wrap {
+    background: var(--card); border-radius: var(--radius-md); padding: 14px 16px;
+    margin-bottom: 18px; box-shadow: var(--shadow-sm);
+  }
+  .text-preview-label { font-size: 12px; font-weight: 700; color: var(--text-soft); margin-bottom: 4px; }
+  .text-preview { font-size: 14.5px; font-style: italic; color: var(--text); line-height: 1.4; }
+
+  .loading-block {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; color: var(--text-soft); font-size: 15px;
+  }
+  .spinner {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 4px solid var(--primary-tint); border-top-color: var(--primary);
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .ingredients-content { display: flex; flex-direction: column; flex: 1; }
+  .ingredients-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+  .empty-hint { color: var(--text-soft); font-size: 14px; }
+
+  .ingredient-chip {
+    display: flex; align-items: center; gap: 6px; background: var(--card);
+    border: 2px solid var(--secondary-tint); border-radius: 999px; padding: 8px 8px 8px 12px;
+    font-size: 14px; font-weight: 600;
+  }
+  .chip-emoji { font-size: 17px; }
+  .chip-name { outline: none; min-width: 16px; border-bottom: 1px dashed transparent; }
+  .chip-name:focus { border-bottom-color: var(--primary); }
+  .chip-remove {
+    background: none; border: none; color: var(--text-soft); font-size: 17px;
+    cursor: pointer; line-height: 1; padding: 2px 3px;
+  }
+  .chip-remove:hover { color: var(--primary); }
+
+  .add-ingredient-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  #new-ingredient-input {
+    flex: 1; border: 2px solid var(--primary-tint); border-radius: 999px;
+    padding: 10px 16px; font-size: 14px; outline: none; background: var(--card); color: var(--text);
+  }
+  #new-ingredient-input:focus { border-color: var(--primary); }
+  .btn-add {
+    background: var(--secondary-tint); color: var(--secondary-dark); border: none;
+    border-radius: 999px; padding: 10px 16px; font-weight: 700; font-size: 14px;
+    cursor: pointer; white-space: nowrap;
+  }
+  .btn-add:hover { background: var(--secondary); color: #fff; }
+
+  .warn-text { color: var(--primary-dark); font-size: 13px; text-align: center; margin: 4px 0 12px; }
+  .ingredients-content .btn-primary { margin-top: auto; }
+
+  /* ---------- Error ---------- */
+  .error-block {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; text-align: center; color: var(--text-soft); font-size: 14.5px;
+  }
+  .btn-secondary {
+    background: var(--card); border: 2px solid var(--primary); color: var(--primary);
+    border-radius: 999px; padding: 10px 24px; font-weight: 700; cursor: pointer;
+  }
+  .error-detail { font-size: 11.5px; color: var(--text-soft); opacity: 0.75; max-width: 270px; word-break: break-word; }
+
+  /* ---------- Pantalla de recetas ---------- */
+  .recipe-content { display: flex; flex-direction: column; flex: 1; }
+  .recipe-card { background: var(--card); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow); margin-bottom: 14px; }
+  .recipe-card-band { height: 84px; display: flex; align-items: center; justify-content: center; background: var(--secondary); }
+  .recipe-emoji { font-size: 42px; }
+  .recipe-card-body { padding: 20px; }
+  .recipe-card-body h3 { font-size: 20px; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.01em; }
+  .recipe-meta { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .meta-pill { background: var(--secondary-tint); color: var(--secondary-dark); font-size: 12.5px; font-weight: 700; padding: 5px 11px; border-radius: 999px; }
+  .recipe-desc { font-size: 14.5px; line-height: 1.5; margin-bottom: 16px; }
+  .recipe-section-label { font-size: 13px; font-weight: 700; color: var(--text-soft); margin-bottom: 8px; }
+  .recipe-ingredients { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+  .mini-chip { background: var(--primary-tint); color: var(--primary-dark); font-size: 12.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+  .recipe-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+  .recipe-steps li { font-size: 14.5px; line-height: 1.45; }
+  .recipe-counter { display: block; text-align: center; font-size: 12.5px; color: var(--text-soft); margin-bottom: 10px; }
+
+  .recipe-actions { margin-top: auto; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+  .btn-text { background: none; border: none; color: var(--text-soft); font-size: 13.5px; cursor: pointer; text-decoration: underline; padding: 4px; }
+
+  button:focus-visible, input:focus-visible, textarea:focus-visible, [contenteditable]:focus-visible {
+    outline: 2px solid var(--primary); outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .steam-wisp, .spinner { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+
+  <!-- ===================== PANTALLA 1: INICIO ===================== -->
+  <section id="screen-home" class="screen active">
+    <div class="home-content">
+      <div class="wordmark"><h1>¿Qué cocino?</h1></div>
+      <p class="tagline">Cuéntame qué tienes y te digo qué cocinar.</p>
+
+      <div class="hero-illustration">
+        <svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ilustración de un bowl con tomate, huevo y cebolla, con vapor saliendo">
+          <path class="steam-wisp" d="M120 115 C108 98,132 88,120 70 C108 52,132 42,122 22" stroke="#5B6B6F" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.35"/>
+          <path class="steam-wisp" d="M160 115 C148 98,172 88,160 68 C148 50,172 40,162 18" stroke="#5B6B6F" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.45"/>
+          <path class="steam-wisp" d="M200 115 C188 98,212 88,200 70 C188 52,212 42,202 22" stroke="#5B6B6F" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.35"/>
+
+          <!-- tomate -->
+          <path d="M90,71 L84,58 L96,58 Z" fill="#66BB6A"/>
+          <circle cx="90" cy="95" r="24" fill="#E8592B"/>
+          <circle cx="82" cy="87" r="5" fill="#FFFFFF" opacity="0.3"/>
+
+          <!-- huevo -->
+          <ellipse cx="160" cy="78" rx="28" ry="20" fill="#FFFFFF" stroke="#FFE3D6" stroke-width="2"/>
+          <circle cx="160" cy="78" r="10" fill="#FFD54F"/>
+
+          <!-- cebolla -->
+          <path d="M232,76 L232,58" stroke="#66BB6A" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="232" cy="98" r="22" fill="#FFD54F"/>
+          <path d="M215,90 Q232,80 249,90" stroke="#E8B93E" stroke-width="2" fill="none" opacity="0.6"/>
+          <path d="M213,102 Q232,113 251,102" stroke="#E8B93E" stroke-width="2" fill="none" opacity="0.6"/>
+
+          <!-- bowl -->
+          <ellipse cx="160" cy="130" rx="120" ry="16" fill="#E8592B"/>
+          <path d="M40,130 L280,130 L245,196 Q160,216 75,196 Z" fill="#FF7043"/>
+          <ellipse cx="160" cy="130" rx="100" ry="9" fill="#FFE3D6" opacity="0.5"/>
+        </svg>
+      </div>
+
+      <div class="text-entry">
+        <textarea id="ingredients-text-input" rows="3" placeholder="Ej: tengo leche, pan y un par de huevos" aria-label="Ingredientes que tienes disponibles"></textarea>
+        <p id="home-warn" class="warn-text" hidden>Cuéntame al menos un ingrediente para continuar.</p>
+        <button id="btn-continue" class="btn-primary">Continuar</button>
+      </div>
+      <p class="hint-text">Escribe los alimentos que tienes, como si se lo contaras a un amigo.</p>
+    </div>
+  </section>
+
+  <!-- ===================== PANTALLA 2: MIS INGREDIENTES ===================== -->
+  <section id="screen-ingredients" class="screen">
+    <header class="screen-header">
+      <button class="btn-back" data-target="home" aria-label="Volver al inicio">←</button>
+      <h2>Esto es lo que encontramos</h2>
+    </header>
+
+    <div class="text-preview-wrap">
+      <p class="text-preview-label">Escribiste:</p>
+      <p id="text-preview" class="text-preview"></p>
+    </div>
+
+    <div id="ingredients-loading" class="loading-block">
+      <div class="spinner"></div>
+      <p>Buscando ingredientes en lo que escribiste…</p>
+    </div>
+
+    <div id="ingredients-content" class="ingredients-content" hidden>
+      <div id="ingredients-grid" class="ingredients-grid"></div>
+
+      <div class="add-ingredient-row">
+        <input type="text" id="new-ingredient-input" placeholder="Agregar ingrediente…" aria-label="Agregar ingrediente">
+        <button id="add-ingredient-btn" class="btn-add">+ Agregar</button>
+      </div>
+      <p id="ingredients-warn" class="warn-text" hidden>Agrega al menos un ingrediente para continuar.</p>
+
+      <button id="btn-what-cook" class="btn-primary">¿Qué puedo cocinar?</button>
+    </div>
+
+    <div id="ingredients-error" class="error-block" hidden>
+      <p>No pudimos entender los ingredientes. Intenta de nuevo.</p>
+      <p id="ingredients-error-detail" class="error-detail"></p>
+      <button class="btn-secondary" id="retry-detect">Reintentar</button>
+    </div>
+  </section>
+
+  <!-- ===================== PANTALLA 3: RECETAS ===================== -->
+  <section id="screen-recipes" class="screen">
+    <header class="screen-header">
+      <button class="btn-back" data-target="ingredients" aria-label="Volver a ingredientes">←</button>
+      <h2>Puedes preparar…</h2>
+    </header>
+
+    <div id="recipes-loading" class="loading-block">
+      <div class="spinner"></div>
+      <p>Buscando recetas…</p>
+    </div>
+
+    <div id="recipe-content" class="recipe-content" hidden>
+      <div id="recipe-card-slot"></div>
+      <div class="recipe-actions">
+        <button id="btn-next-recipe" class="btn-primary">Ver otra receta</button>
+        <button id="btn-restart" class="btn-text">🔄 Empezar de nuevo</button>
+      </div>
+    </div>
+
+    <div id="recipes-empty" class="error-block" hidden>
+      <p>No encontramos recetas posibles con estos ingredientes. Agrega algunos más.</p>
+      <button class="btn-secondary" id="empty-back">← Editar ingredientes</button>
+    </div>
+
+    <div id="recipes-error" class="error-block" hidden>
+      <p>No pudimos generar recetas. Intenta de nuevo.</p>
+      <p id="recipes-error-detail" class="error-detail"></p>
+      <button class="btn-secondary" id="retry-recipes">Reintentar</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  /* =========================================================
+     ESTADO DE LA APLICACIÓN
+     ========================================================= */
+  const state = {
+    lastText: '',          // lo que el usuario escribió
+    ingredients: [],         // [{ id, nombre, emoji }]
+    recipes: [],               // respuesta de la IA
+    recipeIndex: 0,
+    nextId: 1
+  };
+
+  const DIFFICULTY_COLOR = { 'Fácil': '#66BB6A', 'Intermedia': '#FFD54F', 'Elaborada': '#FF7043' };
+  const DIFFICULTY_DOT = { 'Fácil': '🟢', 'Intermedia': '🟡', 'Elaborada': '🔴' };
+
+  const EMOJI_MAP = {
+    huevo: '🥚', huevos: '🥚', tomate: '🍅', papa: '🥔', papas: '🥔', patata: '🥔',
+    cebolla: '🧅', arroz: '🍚', zanahoria: '🥕', pollo: '🍗', carne: '🥩', res: '🥩',
+    pescado: '🐟', atun: '🐟', queso: '🧀', leche: '🥛', pan: '🍞', ajo: '🧄',
+    limon: '🍋', pimiento: '🫑', lechuga: '🥬', frijol: '🫘', frijoles: '🫘',
+    pasta: '🍝', mantequilla: '🧈', sal: '🧂', aceite: '🫙', platano: '🍌',
+    manzana: '🍎', naranja: '🍊', aguacate: '🥑', brocoli: '🥦', champinon: '🍄',
+    jamon: '🍖', salchicha: '🌭', yogur: '🥛', mango: '🥭', maiz: '🌽', elote: '🌽',
+    pepino: '🥒', apio: '🥬', cilantro: '🌿', perejil: '🌿', avena: '🥣'
+  };
+
+  /* =========================================================
+     REFERENCIAS AL DOM
+     ========================================================= */
+  const els = {
+    textInput: document.getElementById('ingredients-text-input'),
+    homeWarn: document.getElementById('home-warn'),
+    btnContinue: document.getElementById('btn-continue'),
+    textPreview: document.getElementById('text-preview'),
+
+    ingredientsLoading: document.getElementById('ingredients-loading'),
+    ingredientsContent: document.getElementById('ingredients-content'),
+    ingredientsError: document.getElementById('ingredients-error'),
+    ingredientsErrorDetail: document.getElementById('ingredients-error-detail'),
+    ingredientsGrid: document.getElementById('ingredients-grid'),
+    newIngredientInput: document.getElementById('new-ingredient-input'),
+    addIngredientBtn: document.getElementById('add-ingredient-btn'),
+    ingredientsWarn: document.getElementById('ingredients-warn'),
+    btnWhatCook: document.getElementById('btn-what-cook'),
+    retryDetect: document.getElementById('retry-detect'),
+
+    recipesLoading: document.getElementById('recipes-loading'),
+    recipeContent: document.getElementById('recipe-content'),
+    recipeCardSlot: document.getElementById('recipe-card-slot'),
+    recipesEmpty: document.getElementById('recipes-empty'),
+    recipesError: document.getElementById('recipes-error'),
+    recipesErrorDetail: document.getElementById('recipes-error-detail'),
+    retryRecipes: document.getElementById('retry-recipes'),
+    btnNextRecipe: document.getElementById('btn-next-recipe'),
+    btnRestart: document.getElementById('btn-restart'),
+    emptyBack: document.getElementById('empty-back')
+  };
+
+  /* =========================================================
+     UTILIDADES
+     ========================================================= */
+  function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str ?? '';
+    return div.innerHTML;
+  }
+
+  function capitalize(s) {
+    if (!s) return s;
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function guessEmoji(name) {
+    const key = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    return EMOJI_MAP[key] || '🍽️';
+  }
+
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+  }
+
+  document.querySelectorAll('.btn-back').forEach(btn => {
+    btn.addEventListener('click', () => showScreen(btn.dataset.target));
+  });
+
+  /* =========================================================
+     LLAMADAS A LA IA (Claude)
+     ========================================================= */
+  async function callClaude(messages) {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000, messages })
+    });
+    if (!response.ok) {
+      let msg = 'Error de la API (' + response.status + ')';
+      try { const errData = await response.json(); if (errData && errData.error && errData.error.message) msg = errData.error.message; } catch (_) {}
+      throw new Error(msg);
+    }
+    const data = await response.json();
+    const textBlock = (data.content || []).find(b => b.type === 'text');
+    if (!textBlock) throw new Error('La respuesta no incluyó texto.');
+    const raw = textBlock.text;
+    const start = raw.indexOf('[');
+    const end = raw.lastIndexOf(']');
+    if (start === -1 || end === -1 || end < start) {
+      throw new Error('La IA no devolvió una lista reconocible: "' + raw.slice(0, 100) + '"');
+    }
+    let parsed;
+    try {
+      parsed = JSON.parse(raw.slice(start, end + 1));
+    } catch (e) {
+      throw new Error('No se pudo interpretar la respuesta de la IA (' + e.message + ')');
+    }
+    if (!Array.isArray(parsed)) throw new Error('La respuesta no es una lista.');
+    return parsed;
+  }
+
+  function parseIngredientsFromText(text) {
+    return callClaude([{
+      role: 'user',
+      content:
+        'Un usuario describe en lenguaje natural los alimentos o ingredientes que tiene disponibles en casa. ' +
+        'Texto del usuario: "' + text.replace(/"/g, "'") + '". ' +
+        'Identifica cada alimento o ingrediente individual mencionado (evita nombrar platos ya preparados). ' +
+        'Responde ÚNICAMENTE con un array JSON válido, sin texto adicional ni marcado de código, con este ' +
+        'formato exacto: [{"nombre":"Leche","emoji":"🥛"}]. Usa nombres en español, en singular, con la ' +
+        'primera letra en mayúscula, y el emoji más representativo de cada uno. Máximo 12 ingredientes. Si ' +
+        'el texto no menciona ningún alimento reconocible, responde con un array vacío [].'
+    }]);
+  }
+
+  function generateRecipes(ingredientNames) {
+    return callClaude([{
+      role: 'user',
+      content:
+        'Tengo disponibles estos ingredientes: ' + ingredientNames.join(', ') + '. ' +
+        'Genera hasta 3 recetas sencillas que se puedan preparar usando ÚNICAMENTE estos ingredientes ' +
+        '(puedes asumir que siempre hay sal, agua, aceite y pimienta como básicos, pero ningún otro ' +
+        'ingrediente adicional). No incluyas recetas que necesiten algo que no esté en la lista. ' +
+        'Responde ÚNICAMENTE con un array JSON válido, sin texto adicional ni marcado de código, con ' +
+        'este formato exacto: [{"nombre":"Nombre de la receta","emoji":"🍳","tiempo":"20 min",' +
+        '"dificultad":"Fácil","descripcion":"Una frase breve.","ingredientesUsados":["Huevo","Tomate"],' +
+        '"pasos":["Paso 1","Paso 2","Paso 3"]}]. La dificultad debe ser exactamente "Fácil", "Intermedia" ' +
+        'o "Elaborada". Usa español, sé breve (máximo 12 palabras por paso, máximo 5 pasos). Si no hay ' +
+        'ninguna receta razonable, responde con un array vacío [].'
+    }]);
+  }
+
+  /* =========================================================
+     PANTALLA 1 → ESCRIBIR INGREDIENTES
+     ========================================================= */
+  els.btnContinue.addEventListener('click', () => {
+    const text = els.textInput.value.trim();
+    if (!text) { els.homeWarn.hidden = false; return; }
+    els.homeWarn.hidden = true;
+    handleIngredientsText(text);
+  });
+  els.textInput.addEventListener('input', () => { els.homeWarn.hidden = true; });
+
+  function handleIngredientsText(text) {
+    state.lastText = text;
+    els.textPreview.textContent = text;
+    showScreen('ingredients');
+    runDetection();
+  }
+
+  /* =========================================================
+     PANTALLA 2 → INGREDIENTES
+     ========================================================= */
+  async function runDetection() {
+    els.ingredientsLoading.hidden = false;
+    els.ingredientsContent.hidden = true;
+    els.ingredientsError.hidden = true;
+    els.ingredientsErrorDetail.textContent = '';
+    try {
+      const detected = await parseIngredientsFromText(state.lastText);
+      state.ingredients = detected.map(d => ({
+        id: state.nextId++,
+        nombre: capitalize(String(d.nombre || '').trim()) || 'Ingrediente',
+        emoji: d.emoji || '🍽️'
+      }));
+      renderIngredients();
+      els.ingredientsLoading.hidden = true;
+      els.ingredientsContent.hidden = false;
+    } catch (err) {
+      console.error(err);
+      els.ingredientsLoading.hidden = true;
+      els.ingredientsError.hidden = false;
+      els.ingredientsErrorDetail.textContent = err.message || '';
+    }
+  }
+  els.retryDetect.addEventListener('click', runDetection);
+
+  function renderIngredients() {
+    els.ingredientsWarn.hidden = true;
+
+    if (state.ingredients.length === 0) {
+      els.ingredientsGrid.innerHTML = '<p class="empty-hint">No detectamos ingredientes. Agrega los que tengas abajo.</p>';
+      return;
+    }
+
+    els.ingredientsGrid.innerHTML = state.ingredients.map(ing => `
+      <div class="ingredient-chip" data-id="${ing.id}">
+        <span class="chip-emoji">${escapeHTML(ing.emoji)}</span>
+        <span class="chip-name" contenteditable="true" tabindex="0" data-id="${ing.id}">${escapeHTML(ing.nombre)}</span>
+        <button class="chip-remove" data-id="${ing.id}" aria-label="Eliminar ${escapeHTML(ing.nombre)}">×</button>
+      </div>
+    `).join('');
+
+    els.ingredientsGrid.querySelectorAll('.chip-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = Number(btn.dataset.id);
+        state.ingredients = state.ingredients.filter(i => i.id !== id);
+        renderIngredients();
+      });
+    });
+
+    els.ingredientsGrid.querySelectorAll('.chip-name').forEach(span => {
+      span.addEventListener('blur', () => {
+        const id = Number(span.dataset.id);
+        const ing = state.ingredients.find(i => i.id === id);
+        if (!ing) return;
+        const newName = span.innerText.trim();
+        span.innerText = newName === '' ? ing.nombre : newName;
+        if (newName !== '') ing.nombre = newName;
+      });
+      span.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); span.blur(); }
+      });
+    });
+  }
+
+  function addIngredientFromInput() {
+    const name = els.newIngredientInput.value.trim();
+    if (!name) return;
+    state.ingredients.push({ id: state.nextId++, nombre: capitalize(name), emoji: guessEmoji(name) });
+    els.newIngredientInput.value = '';
+    renderIngredients();
+    els.newIngredientInput.focus();
+  }
+  els.addIngredientBtn.addEventListener('click', addIngredientFromInput);
+  els.newIngredientInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); addIngredientFromInput(); }
+  });
+
+  els.btnWhatCook.addEventListener('click', () => {
+    if (state.ingredients.length === 0) {
+      els.ingredientsWarn.hidden = false;
+      return;
+    }
+    showScreen('recipes');
+    runRecipeGeneration();
+  });
+
+  /* =========================================================
+     PANTALLA 3 → RECETAS
+     ========================================================= */
+  async function runRecipeGeneration() {
+    els.recipesLoading.hidden = false;
+    els.recipeContent.hidden = true;
+    els.recipesEmpty.hidden = true;
+    els.recipesError.hidden = true;
+    els.recipesErrorDetail.textContent = '';
+    try {
+      const names = state.ingredients.map(i => i.nombre);
+      const recipes = await generateRecipes(names);
+      state.recipes = recipes;
+      state.recipeIndex = 0;
+      els.recipesLoading.hidden = true;
+      if (recipes.length === 0) {
+        els.recipesEmpty.hidden = false;
+      } else {
+        renderRecipe(0);
+        els.recipeContent.hidden = false;
+      }
+    } catch (err) {
+      console.error(err);
+      els.recipesLoading.hidden = true;
+      els.recipesError.hidden = false;
+      els.recipesErrorDetail.textContent = err.message || '';
+    }
+  }
+  els.retryRecipes.addEventListener('click', runRecipeGeneration);
+  els.emptyBack.addEventListener('click', () => showScreen('ingredients'));
+
+  function renderRecipe(idx) {
+    const r = state.recipes[idx];
+    const bandColor = DIFFICULTY_COLOR[r.dificultad] || '#66BB6A';
+    const dot = DIFFICULTY_DOT[r.dificultad] || '🟢';
+    const ingredientesUsados = Array.isArray(r.ingredientesUsados) ? r.ingredientesUsados : [];
+    const pasos = Array.isArray(r.pasos) ? r.pasos : [];
+
+    els.recipeCardSlot.innerHTML = `
+      <p class="recipe-counter">${idx + 1} de ${state.recipes.length}</p>
+      <div class="recipe-card">
+        <div class="recipe-card-band" style="background:${bandColor}">
+          <span class="recipe-emoji">${escapeHTML(r.emoji || '🍽️')}</span>
+        </div>
+        <div class="recipe-card-body">
+          <h3>${escapeHTML(r.nombre || 'Receta')}</h3>
+          <div class="recipe-meta">
+            <span class="meta-pill">⏱ ${escapeHTML(r.tiempo || '—')}</span>
+            <span class="meta-pill">${dot} ${escapeHTML(r.dificultad || 'Fácil')}</span>
+          </div>
+          <p class="recipe-desc">${escapeHTML(r.descripcion || '')}</p>
+          <div class="recipe-section-label">Ingredientes</div>
+          <div class="recipe-ingredients">
+            ${ingredientesUsados.map(i => `<span class="mini-chip">${escapeHTML(i)}</span>`).join('')}
+          </div>
+          <div class="recipe-section-label">Pasos</div>
+          <ol class="recipe-steps">
+            ${pasos.map(p => `<li>${escapeHTML(p)}</li>`).join('')}
+          </ol>
+        </div>
+      </div>
+    `;
+  }
+
+  els.btnNextRecipe.addEventListener('click', () => {
+    if (state.recipes.length === 0) return;
+    state.recipeIndex = (state.recipeIndex + 1) % state.recipes.length;
+    renderRecipe(state.recipeIndex);
+  });
+
+  els.btnRestart.addEventListener('click', resetApp);
+
+  function resetApp() {
+    state.lastText = '';
+    state.ingredients = [];
+    state.recipes = [];
+    state.recipeIndex = 0;
+    els.textInput.value = '';
+    showScreen('home');
+  }
+</script>
+</body>
+</html>
+</h1>
